@@ -1,0 +1,56 @@
+@startuml
+title Full System Flow with Cache-Aside and Write Invalidation
+
+actor Customer
+entity Frontend
+entity Backend
+database Redis
+database MySQL
+
+group Customer submits a complaint (Write Path)
+    Customer -> Frontend: fill complaint form
+    activate Frontend
+        Frontend -> Frontend: validate input
+        alt invalid
+            Frontend --> Customer: prompt re-entry
+        else valid
+            Frontend -> Backend: POST /api/v1/complaints
+        end
+    deactivate Frontend
+
+    activate Backend
+        Backend -> MySQL: INSERT INTO complaints (…)
+        Backend -> Redis: DEL complaints:<name>    ' invalidate cache
+    deactivate Backend
+
+    Backend --> Frontend: 201 Created
+    activate Frontend
+        Frontend --> Customer: confirmation message
+    deactivate Frontend
+end group
+
+group Customer views complaints (Read Path)
+    Customer -> Frontend: navigate to complaints view
+    activate Frontend
+        Frontend -> Backend: GET /api/v1/complaints/{name}
+    deactivate Frontend
+
+    activate Backend
+        Backend -> Redis: GET complaints:<name>
+        alt cache hit
+            Redis --> Backend: cached data
+        else cache miss
+            Redis --> Backend: null
+            Backend -> MySQL: SELECT * FROM complaints WHERE name=…
+            MySQL --> Backend: fresh data
+            Backend -> Redis: SET complaints:<name> fresh data EX 60s
+        end
+    deactivate Backend
+
+    Backend --> Frontend: complaint list JSON
+    activate Frontend
+        Frontend --> Customer: render complaint list
+    deactivate Frontend
+end group
+
+@enduml
