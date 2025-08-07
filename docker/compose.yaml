@@ -18,16 +18,22 @@ services:
     depends_on:
       - mysql
       - redis                 
-    image: backend:0.0.4-SNAPSHOT
+    image: backend:0.0.10-SNAPSHOT
     environment:
-      SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/employee_db?createDatabaseIfNotExist=true
-      SPRING_DATASOURCE_USERNAME: root
-      SPRING_DATASOURCE_PASSWORD: password
+      DATASOURCE_URL: jdbc:mysql://mysql:3306/employee_db?createDatabaseIfNotExist=true
+      DATASOURCE_USERNAME: root
+      DATASOURCE_PASSWORD: password
 
 
-      SPRING_CACHE_TYPE: redis
-      SPRING_DATA_REDIS_HOST: redis
-      SPRING_DATA_REDIS_PORT: 6379
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+
+    secrets:
+      - redis_pass
 
     ports:
       - 8080:8080
+
+secrets:
+  redis_pass:
+    file: ./secrets/redis_pass.txt
