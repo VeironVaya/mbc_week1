@@ -3,9 +3,9 @@ spring:
     name: backend
 
   datasource:
-    url: jdbc:mysql://localhost:3306/employee_db?createDatabaseIfNotExist=true
-    username: root
-    password: ""
+    url: jdbc:mysql://${DB_HOST:mysql}:3306/${DB_NAME:employee_db}?createDatabaseIfNotExist=true
+    username: ${DB_USER:root}
+    password: ${DB_PASS:password}
     driver-class-name: com.mysql.cj.jdbc.Driver
 
   sql:
