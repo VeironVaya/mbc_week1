@@ -34,6 +34,13 @@ services:
     ports:
       - 8080:8080
 
+  frontend:
+    depends_on:
+      - backend
+    image: frontend:latest
+    ports:
+      - 3000:3000
+
 secrets:
   redis_pass:
     file: ./secrets/redis_pass.txt
