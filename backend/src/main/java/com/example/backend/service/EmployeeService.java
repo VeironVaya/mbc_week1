@@ -3,6 +3,8 @@ package com.example.backend.service;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 
 import com.example.backend.dto.request.EmployeeRequestDto;
@@ -19,10 +21,12 @@ import lombok.RequiredArgsConstructor;
 @Service
 @Transactional
 @RequiredArgsConstructor
+
 public class EmployeeService {
     private final EmployeeRepository employeeRepository;
     private final EmployeeMapper employeeMapper;
 
+    @CacheEvict(value = "employees", key = "'allEmployees'")
     public SimpleResponseDto postReport(EmployeeRequestDto reqDto) {
         Employee employee = new Employee();
 
@@ -43,7 +47,9 @@ public class EmployeeService {
 
     }
 
+    @Cacheable(value = "employees", key = "'allEmployees'")
     public EmployeesResponseDto getAllReport() {
+        System.out.println("[CACHE MISS] Fetching employees from database...");
         List<EmployeeResponseDto> dtos = employeeRepository.findAll()
                 .stream()
                 .map(employeeMapper::employeeToDto)
