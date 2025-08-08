@@ -8,12 +8,12 @@
 - [MBC Laboratory Week 1 by Veiron Vaya Yarief](#mbc-laboratory-week-1-by-veiron-vaya-yarief)
 - [Table of Contents](#table-of-contents)
   - [1. Docker Facts](#1-docker-facts)
-    - [1. Difference between running on Compose and Stack](#1-difference-between-running-on-compose-and-stack)
-      - [1.1. Communication](#11-communication)
-      - [1.2. Features](#12-features)
-    - [2. Redis cache on Compose and Stack](#2-redis-cache-on-compose-and-stack)
-    - [3. What happend to cache data if Redis container deleted?](#3-what-happend-to-cache-data-if-redis-container-deleted)
-    - [4. Docker Compose on Docker Swarm](#4-docker-compose-on-docker-swarm)
+    - [1.1 Difference between running on Compose and Stack](#11-difference-between-running-on-compose-and-stack)
+      - [1.1.1 Communication](#111-communication)
+      - [1.1.2 Features](#112-features)
+    - [1.2. Redis cache on Compose and Stack](#12-redis-cache-on-compose-and-stack)
+    - [1.3. What happend to cache data if Redis container deleted?](#13-what-happend-to-cache-data-if-redis-container-deleted)
+    - [1.4. Docker Compose on Docker Swarm](#14-docker-compose-on-docker-swarm)
   - [2. Project Structure](#2-project-structure)
   - [3. Architecture \& System-Flow](#3-architecture--system-flow)
     - [3.1. Architecture](#31-architecture)
@@ -25,30 +25,30 @@
 
 ## 1. Docker Facts
 
-### 1. Difference between running on Compose and Stack
+### 1.1 Difference between running on Compose and Stack
 
 There is some important aspect to look through this topic
 
-#### 1.1. Communication
+#### 1.1.1 Communication
 
   - Compose is a simple multi-container orchestration where the containers communicate with eachother by exposing their port in the same network using **bridge** type network. 
   - While Stack is a complex multi-container orchestration where containers communicate with eachother using **overlay** network, this enable multiple node and their own purpose on the schema.
 
-#### 1.2. Features 
+#### 1.1.2 Features 
 
   - Swarm give better orchestration on another level, like making replicas and how large system communicate through **overlay** netwrok.
   - Docker secrets can only be utilize in swarm mode, because it stored the password encrypted in one file under /run/secrets. 
 
 
-### 2. Redis cache on Compose and Stack
+### 1.2. Redis cache on Compose and Stack
 
   Redis as a storage and in this application we can simplify it as caching, where it store data in RAM, theres nothing difference between the functionality but in swarm redis can work accross multiple node and the redis password can be stored in docker secrets.
 
-### 3. What happend to cache data if Redis container deleted?
+### 1.3. What happend to cache data if Redis container deleted?
 
   When we use Redis it will store data in RAM, when we delete the container the memory is released and cache data gone also when we shutdown the computer because its volatile or in this application when we hit `POST API` because it will do `CacheEvict` where it will delete invalid cache.
 
-### 4. Docker Compose on Docker Swarm
+### 1.4. Docker Compose on Docker Swarm
 
   Docker swarm deploy is using `compile.yaml` file and docker auto read these files so, Docer Compose is Utilized in Swarm mode.
 
