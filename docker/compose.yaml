@@ -1,0 +1,46 @@
+version: "3.8"
+
+services:
+  mysql:
+    image: mysql:oraclelinux9
+    environment:
+      MYSQL_ROOT_PASSWORD: password
+      MYSQL_DATABASE: employee_db
+
+  redis:
+    image: redis:alpine3.22
+    ports:
+      - 6379:6379 
+    command: ["redis-server","/etc/redis/redis.conf"]        
+    volumes:
+      - ./redis/redis.conf:/etc/redis/redis.conf
+  backend:
+    depends_on:
+      - mysql
+      - redis                 
+    image: backend:0.0.10-SNAPSHOT
+    environment:
+      DATASOURCE_URL: jdbc:mysql://mysql:3306/employee_db?createDatabaseIfNotExist=true
+      DATASOURCE_USERNAME: root
+      DATASOURCE_PASSWORD: password
+
+
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+
+    secrets:
+      - redis_pass
+
+    ports:
+      - 8080:8080
+
+  frontend:
+    depends_on:
+      - backend
+    image: frontend:latest
+    ports:
+      - 3000:3000
+
+secrets:
+  redis_pass:
+    file: ./secrets/redis_pass.txt

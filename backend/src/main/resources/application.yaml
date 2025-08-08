@@ -1,11 +1,17 @@
 spring:
+  config:
+    import: optional:configtree:/run/secrets/
+
+  cache:
+    type: redis
+
   application:
     name: backend
 
   datasource:
-    url: jdbc:mysql://${DB_HOST:mysql}:3306/${DB_NAME:employee_db}?createDatabaseIfNotExist=true
-    username: ${DB_USER:root}
-    password: ${DB_PASS:password}
+    url: ${DATASOURCE_URL}
+    username: ${DATASOURCE_USERNAME}
+    password: ${DATASOURCE_PASSWORD}
     driver-class-name: com.mysql.cj.jdbc.Driver
 
   sql:
@@ -22,5 +28,6 @@ spring:
 
   data:
     redis:
-      host: redis
-      port: 6379
+      host: ${REDIS_HOST}
+      port: ${REDIS_PORT}
+      password: ${redis_pass}
