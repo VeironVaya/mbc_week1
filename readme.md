@@ -21,7 +21,8 @@
       - [3.1.2. Frontend](#312-frontend)
       - [3.1.3. Docker](#313-docker)
     - [3.2. System-FLow](#32-system-flow)
-  - [3. Development Process](#3-development-process)
+  - [4. Development Process](#4-development-process)
+  - [5. Documentation](#5-documentation)
 
 ## 1. Docker Facts
 
@@ -127,17 +128,159 @@ MBC_WEEK1/
 ![alt text](architecture.png)
 
 
-## 3. Development Process
+## 4. Development Process
 
 ![alt text](mbc_week1-development_process.drawio.png)
 
-- Start with architecteru design that thinks about many aspect and create architecture design and the system flow
-- Develop backend with clean code and security consideration using REST API, configuration with redis and mysql for data storage.
-- Develop frontend for ui and human interaction.
-- Contenarization backend springboot and react frontend using dockerfile.
-- Make `compose.yaml` on root directory to run multiple container (backend,mysql,redis).
-- Activate SWARM mode to manage multiple node and service.
-- Implement docker secrets. 
+1. Start with architecteru design that thinks about many aspect and create architecture design and the system flow
+2. Develop backend with clean code and security consideration using REST API, configuration with redis and mysql for data storage.
+3. Develop frontend for ui and human interaction.
+4. Contenarization backend Springboot https://spring.io/guides/gs/spring-boot-docker :
+- Navigate to backend root directory
+- Build jar. file: `./mvnw clean package`
+- Make Dockerfile in root directory
+```dockerfile
+FROM openjdk:21-jdk-slim
+ARG JAR_FILE=target/*.jar
+COPY ${JAR_FILE} backend-0.0.1-SNAPSHOT.jar
+ENTRYPOINT ["java","-jar","backend-0.0.1-SNAPSHOT.jar"]
+```
+- Build docker image: `docker build -t <your_repo_name>:<your_tag_name> .`
+- Run: `docker images` to check ur images
+   
+5. Contenarization frontend React https://www.docker.com/blog/how-to-dockerize-react-app/ :
+- Navigate to frontend root directory
+- Create Dockerfile
+```dockerfile
+# Use the latest LTS version of Node.js
+FROM node:18-alpine
+
+# Set the working directory inside the container
+WORKDIR /app
+
+# Copy package.json and package-lock.json
+COPY package*.json ./
+
+# Install dependencies
+RUN npm install
+
+# Copy the rest of your application files
+COPY . .
+
+# Expose the port your app runs on
+EXPOSE 3000
+
+# Define the command to run your app
+CMD ["npm", "start"]
+```
+- Build docker image: `docker build -t my-react-app .`
+  
+6. Make simple `compose.yaml` on root directory to run multiple container (backend,mysql,redis):
+- Create a directory for docker `./docker/`
+```yaml
+networks:
+  backend:
+    driver: bridge
+services:
+  mysql:
+    image: mysql:oraclelinux9
+    networks:
+      - backend
+    environment:
+      MYSQL_ROOT_PASSWORD: password
+      MYSQL_DATABASE: employee_db
+  backend:
+    depends_on:
+      - mysql
+    image: backend:0.0.2-SNAPSHOT
+    networks:
+      - backend
+    environment:
+      SPRING_DATASOURCE_URL:      jdbc:mysql://mysql:3306/employee_db?createDatabaseIfNotExist=true
+      SPRING_DATASOURCE_USERNAME: root
+      SPRING_DATASOURCE_PASSWORD: password
+    ports:
+      - 8080:8080
+```
+- run: `compose up` in docker file directory
+  
+7. Activate SWARM mode to manage multiple node and service https://docs.docker.com/engine/swarm/swarm-tutorial/ :
+- run: `docker swarm init`
+- update compose.yaml file:
+```yaml
+version: "3.8"
+
+services:
+  mysql:
+    image: mysql:oraclelinux9
+    environment:
+      MYSQL_ROOT_PASSWORD: password
+      MYSQL_DATABASE: employee_db
+
+  redis:
+    image: redis:alpine3.22
+    ports:
+      - 6379:6379 
+    command: ["redis-server","/etc/redis/redis.conf"]        
+    volumes:
+      - ./redis/redis.conf:/etc/redis/redis.conf
+  backend:
+    depends_on:
+      - mysql
+      - redis                 
+    image: backend:0.0.10-SNAPSHOT
+    environment:
+      DATASOURCE_URL: jdbc:mysql://mysql:3306/employee_db?createDatabaseIfNotExist=true
+      DATASOURCE_USERNAME: root
+      DATASOURCE_PASSWORD: password
+
+
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+
+    secrets:
+      - redis_pass
+
+    ports:
+      - 8080:8080
+
+  frontend:
+    depends_on:
+      - backend
+    image: frontend:latest
+    ports:
+      - 3000:3000
+
+secrets:
+  redis_pass:
+    file: ./secrets/redis_pass.txt
+```
+- run: `docker stack deploy --compose-file compose.yaml <your_stack_name>`
+- run: `docker service ls` to check your stack 
+8. Implement docker secrets:
+
+- make secrets folder `docker/secrets/` and file `redis_pass.txt`
+```yaml
+requirepass <your_password>
+#aclfile /etc/redis/users.acl
+```
+- go to redish insight insert the password
+- add this code into backend application.yaml for springboot reading the docker secret
+```yaml
+spring:
+  config:
+    import: optional:configtree:/run/secrets/
+```
+- run: `docker stack deploy --compose-file compose.yaml <your_stack_name>`
+
+
+
+## 5. Documentation
+
+![alt text](<Screenshot (343).png>)
+![alt text](<Screenshot (344).png>)
+![alt text](image.png)
+![alt text](image-1.png)
 
 
 
